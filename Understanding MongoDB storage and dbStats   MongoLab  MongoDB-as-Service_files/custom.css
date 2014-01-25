@@ -1,0 +1,113 @@
+/* 
+WOO CUSTOM STYLESHEET
+---------------------
+
+Instructions:
+
+Add your custom styles at the end of this file instead 
+of style.css so it is easier to update the theme. 
+Simply copy an existing style from style.css to this file, 
+and modify it to your liking.
+*/
+
+#wrapper {
+  padding-top: 0px;
+}
+
+#header {
+  padding-top:15px; padding-bottom:15px;
+}
+
+.entry h3 {
+  margin-top: 30px;
+}
+
+.entry h3:first-child {
+  margin-top: 18px;
+}
+
+.widget p {
+  font-size: 14px;
+  font-family: Georgia,"Times New Roman",Times,serif
+}
+
+#logo .site-title a,
+.nav li a:hover, .nav li.current_page_item a, .nav li.current_page_parent a, .nav li.current-menu-ancestor a, .nav li.current-menu-item a, .nav li,
+span.categories {
+  text-transform: lowercase;
+}
+
+.entry p {
+  margin-bottom: .7em;
+}
+
+#text-3.widget {
+  margin-bottom: 5px;
+}
+
+.widget h3 {
+  padding-bottom: 0px;
+}
+
+#toc_container p.toc_title {
+  text-align: left;
+}
+
+
+#logo .site-title a:hover {
+  text-decoration: none;
+}
+
+.post-more {
+  border-top: none;
+}
+
+.post-more .post-comments {
+  text-transform: lowercase;
+}
+
+#logo .site-description,
+#connect h3, #connect div p,
+#post-author,
+#footer #credit {
+  display: none;
+}
+
+#logo .site-title a {
+  font-family: "Century Gothic", "Heiti TC", "Arial", sans-serif
+}
+
+.post .title, .page .title, .post .title a:link, .post .title a:visited, .page .title a:link, .page .title a:visited, 
+.post-meta,
+.nav a, #navigation ul.rss a {
+  font-family: Georgia,"Times New Roman",Times,serif
+}
+
+#logo .site-title {
+    color: #111111;
+    font: 70px/1.5em Georgia,"Times New Roman",Times,serif
+}
+
+#logo .site-title a:hover {
+    color: #4795C2;
+}
+
+
+.entry, .entry p {
+  font: 14px/1.5em Georgia,"Times New Roman",Times,serif
+}
+
+h4 {text-decoration:underline}
+
+.syntaxhighlighter.mongolabCustomCode .plain, .syntaxhighlighter.mongolabCustomCode .plain a {
+  color: inherit !important;
+  font-family: Menlo, Monaco, monospace;
+}
+
+.syntaxhighlighter.mongolabCustomCode caption {
+  color: inherit !important;
+}
+
+.entry .wp-caption {
+  margin: auto auto;
+}

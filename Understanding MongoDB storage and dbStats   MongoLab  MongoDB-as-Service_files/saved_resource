@@ -1,0 +1,4 @@
+.two-col-left #main-sidebar-container { width: 940px; }
+.two-col-left #main-sidebar-container #main { width: 638px; }
+.two-col-left #main-sidebar-container #sidebar { width: 262px; }
+.two-col-left #sidebar-alt { width: -20px; }

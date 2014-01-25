@@ -1,0 +1,531 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0142)http://blog.mongolab.com/2014/01/how-big-is-your-mongodb/?utm_content=buffer0b2f0&utm_medium=social&utm_source=twitter.com&utm_campaign=buffer -->
+<html lang="en-US"><head profile="http://gmpg.org/xfn/11"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Understanding MongoDB storage and dbStats | MongoLab: MongoDB-as-Service</title>
+<meta charset="UTF-8">
+
+<link rel="stylesheet" type="text/css" href="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/style.css" media="screen">
+<link rel="pingback" href="http://blog.mongolab.com/xmlrpc.php">
+<link rel="alternate" type="application/rss+xml" title="MongoLab: MongoDB-as-Service » Feed" href="http://feeds.feedburner.com/blog-mongolab">
+<link rel="alternate" type="application/rss+xml" title="MongoLab: MongoDB-as-Service » Comments Feed" href="http://blog.mongolab.com/comments/feed/">
+<link rel="alternate" type="application/rss+xml" title="MongoLab: MongoDB-as-Service » How big is your MongoDB? Comments Feed" href="http://blog.mongolab.com/2014/01/how-big-is-your-mongodb/feed/">
+<link rel="stylesheet" id="woo-layout-dynamic-css" href="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/saved_resource" type="text/css" media="all">
+<script async="" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/saved_resource(1)"></script><script type="text/javascript" async="" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/ga.js"></script><script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/jquery.js"></script>
+<script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/jquery.ui.core.min.js"></script>
+<script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/jquery.ui.widget.min.js"></script>
+<script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/jquery.ui.tabs.min.js"></script>
+<script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/shortcodes.js"></script>
+<script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/comment-reply.min.js"></script>
+<script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/superfish.js"></script>
+<script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/general.js"></script>
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://blog.mongolab.com/xmlrpc.php?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://blog.mongolab.com/wp-includes/wlwmanifest.xml"> 
+<link rel="prev" title="Tuning MongoDB Performance with MMS" href="http://blog.mongolab.com/2013/12/tuning-mongodb-performance-with-mms/">
+<link rel="shortlink" href="http://blog.mongolab.com/?p=3784">
+<meta property="og:site_name" content="MongoLab: MongoDB-as-Service">
+<meta property="og:type" content="website">
+<meta property="og:image" content="">
+<meta property="og:title" content="How big is your MongoDB?">
+<meta property="og:url" content="http://blog.mongolab.com/2014/01/how-big-is-your-mongodb/">
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-307557-7']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+
+<!-- Theme version -->
+<meta name="generator" content="Canvas 4.0.1">
+<meta name="generator" content="WooFramework 4.0.3">
+
+<!-- Woo Custom Styling -->
+<style type="text/css">
+#logo .site-title, #logo .site-description { display:block; }
+body {background-color:#ffffff;background-repeat:no-repeat;background-position:top center;border-top:0px solid #000000;}
+hr, .entry img, img.thumbnail, .entry .wp-caption, #footer-widgets, #comments, #comments .comment.thread-even, #comments ul.children li, .entry h1{border-color:#4795C2}
+a:link, a:visited {color:#4795C2}
+a:hover, .post-more a:hover, .post-meta a:hover, .post p.tags a:hover {color:#4795C2}
+.button, .reply a {background-color:#4795C2}
+#header {background-color:ffffff;background-repeat:no-repeat;background-position:top center;margin-top:0px;margin-bottom:0px;padding-top:20px;padding-bottom:20px;border:0px solid ;}
+#logo .site-title a {font:normal 70px/1em Arial, sans-serif;color:#222222;}
+#logo .site-description {font:italic 14px/1em Georgia, serif;color:#999999;}
+body, p { font:normal 14px/1.5em Arial, sans-serif;color:#333333; }
+h1 { font:normal 28px/1.5em Georgia, serif;color:#222222; }h2 { font:normal 24px/1.5em Georgia, serif;color:#222222; }h3 { font:normal 20px/1.5em Georgia, serif;color:#222222; }h4 { font:normal 16px/1.5em Georgia, serif;color:#222222; }h5 { font:normal 14px/1.5em Georgia, serif;color:#222222; }h6 { font:normal 12px/1.5em Georgia, serif;color:#222222; }
+.post .title, .page .title, .post .title a:link, .post .title a:visited, .page .title a:link, .page .title a:visited {font:bold 24px/1.2em Arial, sans-serif;color:#222222;}
+.post-meta { font:normal 11px/1.2em "Trebuchet MS", Tahoma, sans-serif;color:#868686; }
+.entry, .entry p{ font:normal 16px/1.5em Georgia, serif;color:#555555; }
+.post-more {font:normal 12px/1.5em Arial, sans-serif;color:#868686;border-top:4px solid #e6e6e6;border-bottom:1px solid #e6e6e6;}
+#post-author, #connect {border-top:1px solid #e6e6e6;border-bottom:4px solid #e6e6e6;background-color:#fafafa}
+.nav-entries, .wp-pagenavi {border-top:1px solid #e6e6e6;border-bottom:4px solid #e6e6e6;}
+.nav-entries a, .wp-pagenavi a:link, .wp-pagenavi a:visited, .wp-pagenavi .current, .wp-pagenavi .on, .wp-pagenavi a:hover, .wp-pagenavi span.extend, .wp-pagenavi span.pages { font:italic 12px/1em Georgia, serif;color:#777777; }
+.wp-pagenavi a:link, .wp-pagenavi a:visited, .wp-pagenavi span.extend, .wp-pagenavi span.pages, .wp-pagenavi span.current {color:#777777!important}
+.widget h3 {font:bold 14px/1.5em Arial, sans-serif;color:#555555;border-bottom:3px solid #e6e6e6;}
+.widget_recent_comments li, #twitter li { border-color: #e6e6e6;}
+.widget p, .widget .textwidget { font:normal 12px/1.5em Arial, sans-serif;color:#555555; }
+.widget {font:normal 12px/1.5em Arial, sans-serif;color:#555555;border-radius:0px;-moz-border-radius:0px;-webkit-border-radius:0px;}
+#tabs .inside li a { font:bold 12px/1.5em Georgia, serif;color:#555555; }
+#tabs .inside li span.meta, #tabs ul.wooTabs li a { font:normal 11px/1.5em "Trebuchet MS", Tahoma, sans-serif;color:#777777; }
+.nav a, #navigation ul.rss a { font:normal 14px/1em Arial, sans-serif;color:#555555; }
+#navigation {border-top:1px solid #dbdbdb;border-bottom:4px solid #dbdbdb;border-left:0px solid #dbdbdb;border-right:0px solid #dbdbdb;border-radius:0px; -moz-border-radius:0px; -webkit-border-radius:0px;}
+#top .nav a { font:normal 14px/1em Arial, sans-serif;color:#ddd; }
+#footer, #footer p { font:italic 14px/1em Georgia, serif;color:#777777; }
+#footer {border-top:4px solid #dbdbdb;border-bottom:0px solid ;border-left:0px solid ;border-right:0px solid ;border-radius:0px; -moz-border-radius:0px; -webkit-border-radius:0px;}
+.magazine #loopedSlider .content h2.title a { font:bold 24px/1em Arial, sans-serif;color:#ffffff; }
+.magazine #loopedSlider .content .excerpt p { font:normal 12px/1.5em Arial, sans-serif;color:#cccccc; }
+.business #loopedSlider .content h2.title a { font:bold 24px/1em Arial, sans-serif;color:#ffffff; }
+.business #loopedSlider .content p { font:normal 12px/1.5em Arial, sans-serif;color:#cccccc; }
+.archive_header { font:normal 18px/1em Arial, sans-serif;color:#555555;border-bottom:5px solid #e6e6e6;}
+</style>
+<!-- /Woo Custom Styling -->
+
+    <link type="text/css" rel="stylesheet" href="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/css">
+    <link rel="stylesheet" type="text/css" href="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/MyFontsWebfontsKit.css">
+<!-- All in One SEO Pack 2.1.2 by Michael Torbert of Semper Fi Web Design[185,225] -->
+<meta name="description" content="This post covers dataSize, storageSize and fileSize metrics to help developers visualize their data and better understand how MongoDB storage works.">
+
+<meta name="keywords" content="10gen,index,mongodb,nosql,open source,opensource,storage">
+
+<link rel="canonical" href="http://blog.mongolab.com/2014/01/how-big-is-your-mongodb/">
+<!-- /all in one seo pack -->
+<style type="text/css" id="syntaxhighlighteranchor"></style>
+<!-- Custom Favicon -->
+<link rel="shortcut icon" href="http://mongolab.wpengine.com/wp-content/uploads/2012/04/favicon-black1.ico">
+
+<!-- Options Panel Custom CSS -->
+<style type="text/css">
+.author #post-author {
+  display: none;
+}
+</style>
+
+<!-- Woo Shortcodes CSS -->
+<link href="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/shortcodes.css" rel="stylesheet" type="text/css">
+
+<!-- Custom Stylesheet -->
+<link href="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/custom.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" async="" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/embed.js"></script><style type="text/css">.fb_hidden{position:absolute;top:-10000px;z-index:10001}
+.fb_invisible{display:none}
+.fb_reset{background:none;border:0;border-spacing:0;color:#000;cursor:auto;direction:ltr;font-family:"lucida grande", tahoma, verdana, arial, sans-serif;font-size:11px;font-style:normal;font-variant:normal;font-weight:normal;letter-spacing:normal;line-height:1;margin:0;overflow:visible;padding:0;text-align:left;text-decoration:none;text-indent:0;text-shadow:none;text-transform:none;visibility:visible;white-space:normal;word-spacing:normal}
+.fb_reset > div{overflow:hidden}
+.fb_link img{border:none}
+.fb_dialog{background:rgba(82, 82, 82, .7);position:absolute;top:-10000px;z-index:10001}
+.fb_dialog_advanced{padding:10px;-moz-border-radius:8px;-webkit-border-radius:8px;border-radius:8px}
+.fb_dialog_content{background:#fff;color:#333}
+.fb_dialog_close_icon{background:url(http://static.ak.fbcdn.net/rsrc.php/v2/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 0 transparent;_background-image:url(http://static.ak.fbcdn.net/rsrc.php/v2/yL/r/s816eWC-2sl.gif);cursor:pointer;display:block;height:15px;position:absolute;right:18px;top:17px;width:15px;top:8px\9;right:7px\9}
+.fb_dialog_mobile .fb_dialog_close_icon{top:5px;left:5px;right:auto}
+.fb_dialog_padding{background-color:transparent;position:absolute;width:1px;z-index:-1}
+.fb_dialog_close_icon:hover{background:url(http://static.ak.fbcdn.net/rsrc.php/v2/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 -15px transparent;_background-image:url(http://static.ak.fbcdn.net/rsrc.php/v2/yL/r/s816eWC-2sl.gif)}
+.fb_dialog_close_icon:active{background:url(http://static.ak.fbcdn.net/rsrc.php/v2/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 -30px transparent;_background-image:url(http://static.ak.fbcdn.net/rsrc.php/v2/yL/r/s816eWC-2sl.gif)}
+.fb_dialog_loader{background-color:#f2f2f2;border:1px solid #606060;font-size:24px;padding:20px}
+.fb_dialog_top_left,
+.fb_dialog_top_right,
+.fb_dialog_bottom_left,
+.fb_dialog_bottom_right{height:10px;width:10px;overflow:hidden;position:absolute}
+.fb_dialog_top_left{background:url(http://static.ak.fbcdn.net/rsrc.php/v2/ye/r/8YeTNIlTZjm.png) no-repeat 0 0;left:-10px;top:-10px}
+.fb_dialog_top_right{background:url(http://static.ak.fbcdn.net/rsrc.php/v2/ye/r/8YeTNIlTZjm.png) no-repeat 0 -10px;right:-10px;top:-10px}
+.fb_dialog_bottom_left{background:url(http://static.ak.fbcdn.net/rsrc.php/v2/ye/r/8YeTNIlTZjm.png) no-repeat 0 -20px;bottom:-10px;left:-10px}
+.fb_dialog_bottom_right{background:url(http://static.ak.fbcdn.net/rsrc.php/v2/ye/r/8YeTNIlTZjm.png) no-repeat 0 -30px;right:-10px;bottom:-10px}
+.fb_dialog_vert_left,
+.fb_dialog_vert_right,
+.fb_dialog_horiz_top,
+.fb_dialog_horiz_bottom{position:absolute;background:#525252;filter:alpha(opacity=70);opacity:.7}
+.fb_dialog_vert_left,
+.fb_dialog_vert_right{width:10px;height:100%}
+.fb_dialog_vert_left{margin-left:-10px}
+.fb_dialog_vert_right{right:0;margin-right:-10px}
+.fb_dialog_horiz_top,
+.fb_dialog_horiz_bottom{width:100%;height:10px}
+.fb_dialog_horiz_top{margin-top:-10px}
+.fb_dialog_horiz_bottom{bottom:0;margin-bottom:-10px}
+.fb_dialog_iframe{line-height:0}
+.fb_dialog_content .dialog_title{background:#6d84b4;border:1px solid #3b5998;color:#fff;font-size:14px;font-weight:bold;margin:0}
+.fb_dialog_content .dialog_title > span{background:url(http://static.ak.fbcdn.net/rsrc.php/v2/yd/r/Cou7n-nqK52.gif)
+no-repeat 5px 50%;float:left;padding:5px 0 7px 26px}
+body.fb_hidden{-webkit-transform:none;height:100%;margin:0;overflow:visible;position:absolute;top:-10000px;left:0;width:100%}
+.fb_dialog.fb_dialog_mobile.loading{background:url(http://static.ak.fbcdn.net/rsrc.php/v2/ya/r/3rhSv5V8j3o.gif)
+white no-repeat 50% 50%;min-height:100%;min-width:100%;overflow:hidden;position:absolute;top:0;z-index:10001}
+.fb_dialog.fb_dialog_mobile.loading.centered{max-height:590px;min-height:590px;max-width:500px;min-width:500px}
+#fb-root #fb_dialog_ipad_overlay{background:rgba(0, 0, 0, .45);position:absolute;left:0;top:0;width:100%;min-height:100%;z-index:10000}
+#fb-root #fb_dialog_ipad_overlay.hidden{display:none}
+.fb_dialog.fb_dialog_mobile.loading iframe{visibility:hidden}
+.fb_dialog_content .dialog_header{-webkit-box-shadow:white 0 1px 1px -1px inset;background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#738ABA), to(#2C4987));border-bottom:1px solid;border-color:#1d4088;color:#fff;font:14px Helvetica, sans-serif;font-weight:bold;text-overflow:ellipsis;text-shadow:rgba(0, 30, 84, .296875) 0 -1px 0;vertical-align:middle;white-space:nowrap}
+.fb_dialog_content .dialog_header table{-webkit-font-smoothing:subpixel-antialiased;height:43px;width:100%
+}
+.fb_dialog_content .dialog_header td.header_left{font-size:12px;padding-left:5px;vertical-align:middle;width:60px
+}
+.fb_dialog_content .dialog_header td.header_right{font-size:12px;padding-right:5px;vertical-align:middle;width:60px
+}
+.fb_dialog_content .touchable_button{background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#4966A6),
+color-stop(0.5, #355492), to(#2A4887));border:1px solid #29447e;-webkit-background-clip:padding-box;-webkit-border-radius:3px;-webkit-box-shadow:rgba(0, 0, 0, .117188) 0 1px 1px inset,
+rgba(255, 255, 255, .167969) 0 1px 0;display:inline-block;margin-top:3px;max-width:85px;line-height:18px;padding:4px 12px;position:relative}
+.fb_dialog_content .dialog_header .touchable_button input{border:none;background:none;color:#fff;font:12px Helvetica, sans-serif;font-weight:bold;margin:2px -12px;padding:2px 6px 3px 6px;text-shadow:rgba(0, 30, 84, .296875) 0 -1px 0}
+.fb_dialog_content .dialog_header .header_center{color:#fff;font-size:16px;font-weight:bold;line-height:18px;text-align:center;vertical-align:middle}
+.fb_dialog_content .dialog_content{background:url(http://static.ak.fbcdn.net/rsrc.php/v2/y9/r/jKEcVPZFk-2.gif) no-repeat 50% 50%;border:1px solid #555;border-bottom:0;border-top:0;height:150px}
+.fb_dialog_content .dialog_footer{background:#f2f2f2;border:1px solid #555;border-top-color:#ccc;height:40px}
+#fb_dialog_loader_close{float:left}
+.fb_dialog.fb_dialog_mobile .fb_dialog_close_button{text-shadow:rgba(0, 30, 84, .296875) 0 -1px 0}
+.fb_dialog.fb_dialog_mobile .fb_dialog_close_icon{visibility:hidden}
+.fb_iframe_widget{display:inline-block;position:relative}
+.fb_iframe_widget span{display:inline-block;position:relative;text-align:justify}
+.fb_iframe_widget iframe{position:absolute}
+.fb_iframe_widget_lift{z-index:1}
+.fb_hide_iframes iframe{position:relative;left:-10000px}
+.fb_iframe_widget_loader{position:relative;display:inline-block}
+.fb_iframe_widget_fluid{display:inline}
+.fb_iframe_widget_fluid span{width:100%}
+.fb_iframe_widget_loader iframe{min-height:32px;z-index:2;zoom:1}
+.fb_iframe_widget_loader .FB_Loader{background:url(http://static.ak.fbcdn.net/rsrc.php/v2/y9/r/jKEcVPZFk-2.gif) no-repeat;height:32px;width:32px;margin-left:-16px;position:absolute;left:50%;z-index:4}
+.fb_connect_bar_container div,
+.fb_connect_bar_container span,
+.fb_connect_bar_container a,
+.fb_connect_bar_container img,
+.fb_connect_bar_container strong{background:none;border-spacing:0;border:0;direction:ltr;font-style:normal;font-variant:normal;letter-spacing:normal;line-height:1;margin:0;overflow:visible;padding:0;text-align:left;text-decoration:none;text-indent:0;text-shadow:none;text-transform:none;visibility:visible;white-space:normal;word-spacing:normal;vertical-align:baseline}
+.fb_connect_bar_container{position:fixed;left:0 !important;right:0 !important;height:42px !important;padding:0 25px !important;margin:0 !important;vertical-align:middle !important;border-bottom:1px solid #333 !important;background:#3b5998 !important;z-index:99999999 !important;overflow:hidden !important}
+.fb_connect_bar_container_ie6{position:absolute;top:expression(document.compatMode=="CSS1Compat"? document.documentElement.scrollTop+"px":body.scrollTop+"px")}
+.fb_connect_bar{position:relative;margin:auto;height:100%;width:100%;padding:6px 0 0 0 !important;background:none;color:#fff !important;font-family:"lucida grande", tahoma, verdana, arial, sans-serif !important;font-size:13px !important;font-style:normal !important;font-variant:normal !important;font-weight:normal !important;letter-spacing:normal !important;line-height:1 !important;text-decoration:none !important;text-indent:0 !important;text-shadow:none !important;text-transform:none !important;white-space:normal !important;word-spacing:normal !important}
+.fb_connect_bar a:hover{color:#fff}
+.fb_connect_bar .fb_profile img{height:30px;width:30px;vertical-align:middle;margin:0 6px 5px 0}
+.fb_connect_bar div a,
+.fb_connect_bar span,
+.fb_connect_bar span a{color:#bac6da;font-size:11px;text-decoration:none}
+.fb_connect_bar .fb_buttons{float:right;margin-top:7px}
+.fb_edge_widget_with_comment{position:relative;*z-index:1000}
+.fb_edge_widget_with_comment span.fb_edge_comment_widget{position:absolute}
+.fb_edge_widget_with_comment span.fb_send_button_form_widget{z-index:1}
+.fb_edge_widget_with_comment span.fb_send_button_form_widget .FB_Loader{left:0;top:1px;margin-top:6px;margin-left:0;background-position:50% 50%;background-color:#fff;height:150px;width:394px;border:1px #666 solid;border-bottom:2px solid #283e6c;z-index:1}
+.fb_edge_widget_with_comment span.fb_send_button_form_widget.dark .FB_Loader{background-color:#000;border-bottom:2px solid #ccc}
+.fb_edge_widget_with_comment span.fb_send_button_form_widget.siderender
+.FB_Loader{margin-top:0}
+.fbpluginrecommendationsbarleft,
+.fbpluginrecommendationsbarright{position:fixed !important;bottom:0;z-index:999}
+.fbpluginrecommendationsbarleft{left:10px}
+.fbpluginrecommendationsbarright{right:10px}</style><script src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/alfie.js" async="" charset="UTF-8"></script></head>
+<body class="single single-post postid-3784 single-format-standard unknown two-col-left width-960 two-col-left-960" data-twttr-rendered="true" style="">
+
+<div id="wrapper">        
+	    
+	<div id="header" class="col-full">
+ 		
+		       
+		<div id="logo">
+		<span class="site-title">{ <a href="http://blog.mongolab.com/" title="blog home">blog</a>: <a href="http://mongolab.com/" title="mongolab.com">mongolab</a> }</span>
+<span class="site-description">Blog for MongoDB cloud hosting service MongoLab</span>
+		</div><!-- /#logo -->
+	       
+		       
+	</div><!-- /#header -->
+		
+		
+	<div id="navigation" class="col-full">
+		
+						<ul id="main-nav" class="nav fl sf-js-enabled">
+							
+								<li class="page_item current_page_item"><a href="http://blog.mongolab.com/">Home</a></li>
+				<li class="page_item page-item-47"><a href="http://blog.mongolab.com/archive/">Archive</a></li>
+<li class="page_item page-item-1071"><a href="http://blog.mongolab.com/events/">Events</a></li>
+	
+					</ul><!-- /#nav -->
+						
+	</div><!-- /#navigation -->
+	
+		
+	       
+    <!-- #content Starts -->
+	    <div id="content" class="col-full">
+    
+    	<div id="main-sidebar-container">    
+
+            <!-- #main Starts -->
+                        <div id="main">                       
+<div class="post-3784 post type-post status-publish format-standard hentry category-mongodb tag-10gen tag-index tag-mongodb-2 tag-nosql tag-open-source tag-opensource tag-storage">
+<h1 class="title"><a href="http://blog.mongolab.com/2014/01/how-big-is-your-mongodb/" rel="bookmark" title="How big is your MongoDB?">How big is your MongoDB?</a></h1><div class="post-meta"><span class="small">By <span class="author vcard"><span class="fn"><a href="http://blog.mongolab.com/author/chris/" title="Posts by chris" rel="author">chris</a></span></span> </span> <span class="small">on</span> <abbr class="date time published" title="2014-01-23T08:00:39-0800">2014/01/23</abbr>  <span class="small">in</span> <span class="categories"><a href="http://blog.mongolab.com/category/mongodb/" title="View all posts in MongoDB" rel="category tag">MongoDB</a></span>   </div>
+	<div class="entry">
+	    
+<!-- This is the start of the WP Twitter Button code -->
+<div id="rk_wp_twitter_button" style="margin: 0px 0px 10px 0px; float: right"><iframe id="twitter-widget-0" scrolling="no" frameborder="0" allowtransparency="true" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/tweet_button.1389999802.htm" class="twitter-share-button twitter-tweet-button twitter-count-horizontal" title="Twitter Tweet Button" data-twttr-rendered="true" style="width: 110px; height: 20px;"></iframe><script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/widgets.js"></script></div>
+<!-- This is the end of the WP Twitter Button code -->
+
+<div id="fb_share_1" style="float: right; margin-right: 8px;"><div class="fb-share-button fb_iframe_widget" data-href="http://blog.mongolab.com/2014/01/how-big-is-your-mongodb/" data-type="button_count" fb-xfbml-state="rendered" fb-iframe-plugin-query="app_id=&amp;href=http%3A%2F%2Fblog.mongolab.com%2F2014%2F01%2Fhow-big-is-your-mongodb%2F&amp;locale=en_US&amp;sdk=joey&amp;type=button_count"><span style="vertical-align: bottom; width: 86px; height: 20px;"><iframe name="f1547dc868" width="1000px" height="1000px" frameborder="0" allowtransparency="true" scrolling="no" title="fb:share_button Facebook Social Plugin" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/share_button.htm" style="border: none; visibility: visible; width: 86px; height: 20px;" class=""></iframe></span></div></div><div><script src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/FB.Share" type="text/javascript"></script></div><p>As your MongoDB grows in size, information from the <a href="http://docs.mongodb.org/manual/reference/command/dbStats/" target="_blank">db.stats()</a> diagnostic command (or the database “Stats” tab in our management portal) becomes increasingly helpful for evaluating hardware requirements.</p>
+<p>We frequently get questions about the dataSize, storageSize and fileSize&nbsp;metrics, so we want to help developers better understand how MongoDB storage works and what these particular metrics mean.</p>
+<h2>MongoDB storage structure ba<span style="color: #000000;">sic</span>s</h2>
+<p>First, we’ll go over the basics of how MongoDB stores your data.</p>
+<h3 style="margin-top: 15px;">Data files</h3>
+<p>Every MongoDB instance consists of a namespace file, &nbsp;journal files and data files. For our discussion, we’ll only be focusing on data files, since that is where all of the data and indexes for your database reside.</p>
+<p>Data files store BSON documents, indexes, and MongoDB-generated metadata in structures called extents. Each data file is made up of multiple extents.</p>
+<h3 style="margin-top: 15px;">Extents</h3>
+<p>Extents are logical containers within data files used to store documents and indexes.</p>
+<p dir="ltr" style="text-align: center;"><a href="http://blog.mongolab.com/wp-content/uploads/2014/01/data_extents1.png"><img class="alignnone size-large wp-image-3832" style="border: 0px;" alt="Photo of data files and extents" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/data_extents1-1024x430.png" width="640" height="268"></a></p>
+<p>The above diagram illustrates the relationship between data files and extents. Note:</p>
+<ul>
+<li>Collections often span multiple extents</li>
+<li>Every index in a collection is contained in its own extent</li>
+<li>Preallocated space is a byproduct of extent and data file creation. When a new extent is needed, MongoDB will attempt to fill the pre-allocated space within the current data file. If the extent cannot fit, MongoDB will use the next data file available (not pictured)</li>
+</ul>
+<h2>Metrics from db.stats()</h2>
+<p>Now that we understand the basics of how MongoDB storage is organized, we can explore metrics commonly examined with db.stats(): dataSize, storageSize and fileSize.</p>
+<h3 style="margin-top: 15px;">dataSize</h3>
+<p style="text-align: center;"><a href="http://blog.mongolab.com/wp-content/uploads/2014/01/data_size.png"><img class="aligncenter size-large wp-image-3761" style="border: 0px;" alt="Picture of MongoDB dbStats dataSize" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/data_size-1024x385.png" width="640" height="240"></a></p>
+<p>The dataSize metric is the sum of the the sizes (in bytes) of all the documents and padding stored in the database.</p>
+<p dir="ltr">While dataSize does decrease when you delete documents, dataSize does not decrease when documents shrink because the space used by the original document has already been allocated (to that particular document) and cannot be used by other documents.</p>
+<p>Alternatively, if a user updates a document with more data, dataSize will remain the same as long as the new document fits within its originally padded pre-allocated space.</p>
+<h3 style="margin-top: 15px;">storageSize</h3>
+<p style="text-align: center;"><a href="http://blog.mongolab.com/wp-content/uploads/2014/01/storage_size.png"><img class="aligncenter size-large wp-image-3763" style="border: 0px;" alt="Photo of MongoDB dbStats storageSize" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/storage_size-1024x407.png" width="640" height="254"></a></p>
+<p dir="ltr">The storageSize metric is equal to the size (in bytes) of all the data extents in the database. This number is larger than dataSize because it includes yet-unused space (in data extents) and space vacated by deleted or moved documents within extents.</p>
+<p>The storageSize does not decrease as you remove or shrink documents.</p>
+<h3 style="margin-top: 15px;">fileSize</h3>
+<p style="text-align: center;"><a href="http://blog.mongolab.com/wp-content/uploads/2014/01/file_size.png"><img class="aligncenter size-large wp-image-3762" style="border: 0px;" alt="Photo of MongoDB dbStats fileSize" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/file_size-1024x430.png" width="640" height="268"></a></p>
+<p dir="ltr">The fileSize metric is equal to the size (in bytes) of all the data extents, index extents and yet-unused space (in data files) in the database. This metric represents the storage footprint of your database on disk. fileSize is larger than storageSize because it includes index extents and yet-unused space in data files.</p>
+<p>While fileSize does decrease when you delete a database, fileSize does not decrease as you remove collections, documents or indexes.</p>
+<h2>What now?</h2>
+<p>That’s it! The next time someone asks you how big your database is you know what to tell them.</p>
+	</div><!-- /.entry -->
+<div id="post-author">
+	<div class="profile-image"><img alt="" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/2ced3433512c1d088d97706c0c48e6b4" class="avatar avatar-80 photo" height="80" width="80"></div>
+	<div class="profile-content">
+		<h4>About chris</h4>
+						<div class="profile-link">
+			<a href="http://blog.mongolab.com/author/chris/">
+				View all posts by chris <span class="meta-nav">→</span>			</a>
+		</div><!-- #profile-link	-->
+			</div>
+	<div class="fix"></div>
+</div>
+	 
+	<div id="connect">
+		<h3>Subscribe</h3>
+		
+		<div class="col-left">
+			<p>Subscribe to our e-mail newsletter to receive updates.</p>
+			
+						
+								
+			<div class="social">		    	   		
+		   				   		<a href="http://feeds.feedburner.com/blog-mongolab" class="subscribe"><img src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/ico-social-rss.png" title="Subscribe to our RSS feed" alt=""></a>
+		   		
+		   					</div>
+						
+		</div><!-- col-left -->
+		
+				<div class="related-posts col-right">
+			<h4>Related Posts:</h4>
+			
+<ul class="woo-sc-related-posts">
+	<li><a class="related-title" title="Are you ready for production?" href="http://blog.mongolab.com/2013/08/are-you-ready-for-production/"><span>Are you ready for production?</span></a></li>
+
+	<li><a class="related-title" title="Harnessing the power of Twitter and MongoDB" href="http://blog.mongolab.com/2013/08/harnessing-the-power-of-twitter-and-mongodb/"><span>Harnessing the power of Twitter and MongoDB</span></a></li>
+
+	<li><a class="related-title" title="Remote Dex: Index Analysis Using the Profile Collection" href="http://blog.mongolab.com/2012/07/remote-dex/"><span>Remote Dex: Index Analysis Using the Profile Collection</span></a></li>
+
+	<li><a class="related-title" title="Introducing Dex: the Index Bot" href="http://blog.mongolab.com/2012/06/introducing-dex-the-index-bot/"><span>Introducing Dex: the Index Bot</span></a></li>
+
+	<li><a class="related-title" title="Deep Dive into Connection Pooling" href="http://blog.mongolab.com/2013/11/deep-dive-into-connection-pooling/"><span>Deep Dive into Connection Pooling</span></a></li>
+</ul>
+		</div><!-- col-right -->
+									
+        <div class="fix"></div>
+	</div>
+	<div class="post-utility"><p class="tags"><a href="http://blog.mongolab.com/tag/10gen/" rel="tag">10gen</a>, <a href="http://blog.mongolab.com/tag/index/" rel="tag">index</a>, <a href="http://blog.mongolab.com/tag/mongodb-2/" rel="tag">mongodb</a>, <a href="http://blog.mongolab.com/tag/nosql/" rel="tag">nosql</a>, <a href="http://blog.mongolab.com/tag/open-source/" rel="tag">open source</a>, <a href="http://blog.mongolab.com/tag/opensource/" rel="tag">opensource</a>, <a href="http://blog.mongolab.com/tag/storage/" rel="tag">storage</a></p> </div>
+</div><!-- /.post -->
+	        <div class="post-entries">
+	            <div class="nav-prev fl"><a href="http://blog.mongolab.com/2013/12/tuning-mongodb-performance-with-mms/" rel="prev"><span class="meta-nav">←</span> Tuning MongoDB Performance with MMS</a></div>
+	            <div class="nav-next fr"></div>
+	            <div class="fix"></div>
+	        </div>	
+	
+		
+<div id="disqus_thread"><iframe id="dsq-2" data-disqus-uid="2" allowtransparency="true" frameborder="0" tabindex="0" title="Disqus" width="100%" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/saved_resource.htm" style="width: 100% !important; border: none !important; overflow: hidden !important; height: 672px !important;" scrolling="no" horizontalscrolling="no" verticalscrolling="no"></iframe><iframe id="dsq-indicator-north" data-disqus-uid="indicator-north" allowtransparency="true" frameborder="0" tabindex="0" title="Disqus" scrolling="no" style="width: 638px !important; border: none !important; overflow: hidden !important; top: 0px !important; min-width: 638px !important; max-width: 638px !important; position: fixed !important; z-index: 2147483646 !important; height: 29px !important; min-height: 29px !important; max-height: 29px !important; display: none !important;"></iframe><iframe id="dsq-indicator-south" data-disqus-uid="indicator-south" allowtransparency="true" frameborder="0" tabindex="0" title="Disqus" scrolling="no" style="width: 638px !important; border: none !important; overflow: hidden !important; bottom: 0px !important; min-width: 638px !important; max-width: 638px !important; position: fixed !important; z-index: 2147483646 !important; height: 29px !important; min-height: 29px !important; max-height: 29px !important; display: none !important;"></iframe></div>
+
+<script type="text/javascript">
+/* <![CDATA[ */
+    var disqus_url = 'http://blog.mongolab.com/2014/01/how-big-is-your-mongodb/';
+    var disqus_identifier = '3784 http://blog.mongolab.com/?p=3784';
+    var disqus_container_id = 'disqus_thread';
+    var disqus_domain = 'disqus.com';
+    var disqus_shortname = 'objectlabs';
+    var disqus_title = "How big is your MongoDB?";
+        var disqus_config = function () {
+        var config = this; // Access to the config object
+        config.language = '';
+
+        /*
+           All currently supported events:
+            * preData — fires just before we request for initial data
+            * preInit - fires after we get initial data but before we load any dependencies
+            * onInit  - fires when all dependencies are resolved but before dtpl template is rendered
+            * afterRender - fires when template is rendered but before we show it
+            * onReady - everything is done
+         */
+
+        config.callbacks.preData.push(function() {
+            // clear out the container (its filled for SEO/legacy purposes)
+            document.getElementById(disqus_container_id).innerHTML = '';
+        });
+                config.callbacks.onReady.push(function() {
+            // sync comments in the background so we don't block the page
+            var script = document.createElement('script');
+            script.async = true;
+            script.src = '?cf_action=sync_comments&post_id=3784';
+
+            var firstScript = document.getElementsByTagName( "script" )[0];
+            firstScript.parentNode.insertBefore(script, firstScript);
+        });
+                    };
+/* ]]> */
+</script>
+
+<script type="text/javascript">
+/* <![CDATA[ */
+    var DsqLocal = {
+        'trackbacks': [
+        ],
+        'trackback_url': "http:\/\/blog.mongolab.com\/2014\/01\/how-big-is-your-mongodb\/trackback\/"    };
+/* ]]> */
+</script>
+
+<script type="text/javascript">
+/* <![CDATA[ */
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.' + 'disqus.com' + '/embed.js?pname=wordpress&pver=2.74';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();
+/* ]]> */
+</script>
+     
+            </div><!-- /#main -->
+                
+            <div id="sidebar">
+	<div id="text-2" class="widget widget_text"><h3>About</h3>			<div class="textwidget"><p><a href="http://mongolab.com/" title="MongoLab: MongoDB-as-a-Service"><img src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/MongoLab-logo_white-horizontal-200px.png" alt="MongoLab: MongoDB-as-a-Service | Cloud Hosted MongoDB"></a></p>
+<p>This blog is brought to you by <a href="https://mongolab.com/">MongoLab</a>, the fully-managed MongoDB Database-as-a-Service (DBaaS) platform that automates the operational aspects of running MongoDB in the cloud.</p>
+<p>We hope you enjoy it!</p>
+</div>
+		</div><div id="woo_search-2" class="widget widget_woo_search"><h3>Search</h3><div class="search_main">
+    <form method="get" class="searchform" action="http://blog.mongolab.com/">
+        <input type="text" class="field s" name="s" value="Search..." onfocus="if (this.value == &#39;Search...&#39;) {this.value = &#39;&#39;;}" onblur="if (this.value == &#39;&#39;) {this.value = &#39;Search...&#39;;}">
+        <input type="image" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/ico-search.png" class="submit" name="submit" value="Go">
+    </form>    
+    <div class="fix"></div>
+</div>
+</div>		<div id="recent-posts-2" class="widget widget_recent_entries">		<h3>Recent Posts</h3>		<ul>
+					<li>
+				<a href="http://blog.mongolab.com/2014/01/how-big-is-your-mongodb/">How big is your MongoDB?</a>
+						</li>
+					<li>
+				<a href="http://blog.mongolab.com/2013/12/tuning-mongodb-performance-with-mms/">Tuning MongoDB Performance with MMS</a>
+						</li>
+					<li>
+				<a href="http://blog.mongolab.com/2013/11/mongolab-now-supports-two-factor-authentication/">MongoLab Now Supports Two-Factor Authentication</a>
+						</li>
+					<li>
+				<a href="http://blog.mongolab.com/2013/11/deep-dive-into-connection-pooling/">Deep Dive into Connection Pooling</a>
+						</li>
+					<li>
+				<a href="http://blog.mongolab.com/2013/10/round-two-node-knockout-2013/">Round Two: Node Knockout 2013!</a>
+						</li>
+				</ul>
+		</div><div id="woo_twitter-2" class="widget widget_woo_twitter"><h3>Recent Tweets</h3><div class="back">
+<ul id="twitter_update_list_woo_twitter-2">
+<li></li>
+</ul>
+<p>Follow <a href="http://twitter.com/mongolab"><strong>@mongolab</strong></a> on Twitter</p>
+</div>
+<div class="clear"></div>
+	<script type="text/javascript">
+	<!--//--><![CDATA[//><!--
+	
+	    function twitterCallback2(twitters) {
+	    
+	      var statusHTML = [];
+	      for (var i=0; i<twitters.length; i++){
+	        var username = twitters[i].user.screen_name;
+	        var status = twitters[i].text.replace(/((https?|s?ftp|ssh)\:\/\/[^"\s\<\>]*[^.,;'">\:\s\<\>\)\]\!])/g, function(url) {
+	          return '<a href="'+url+'">'+url+'</a>';
+	        }).replace(/\B@([_a-z0-9]+)/ig, function(reply) {
+	          return  reply.charAt(0)+'<a href="http://twitter.com/'+reply.substring(1)+'">'+reply.substring(1)+'</a>';
+	        });
+	        statusHTML.push( '<li><span class="content">'+status+'</span> <a style="font-size:85%" class="time" href="http://twitter.com/'+username+'/statuses/'+twitters[i].id_str+'">'+relative_time(twitters[i].created_at)+'</a></li>' );
+	      }
+	      document.getElementById( 'twitter_update_list_woo_twitter-2').innerHTML = statusHTML.join( '' );
+	    }
+	    
+	    function relative_time(time_value) {
+	      var values = time_value.split( " " );
+	      time_value = values[1] + " " + values[2] + ", " + values[5] + " " + values[3];
+	      var parsed_date = Date.parse(time_value);
+	      var relative_to = (arguments.length > 1) ? arguments[1] : new Date();
+	      var delta = parseInt((relative_to.getTime() - parsed_date) / 1000);
+	      delta = delta + (relative_to.getTimezoneOffset() * 60);
+	    
+	      if (delta < 60) {
+	        return 'less than a minute ago';
+	      } else if(delta < 120) {
+	        return 'about a minute ago';
+	      } else if(delta < (60*60)) {
+	        return (parseInt(delta / 60)).toString() + ' minutes ago';
+	      } else if(delta < (120*60)) {
+	        return 'about an hour ago';
+	      } else if(delta < (24*60*60)) {
+	        return 'about ' + (parseInt(delta / 3600)).toString() + ' hours ago';
+	      } else if(delta < (48*60*60)) {
+	        return '1 day ago';
+	      } else {
+	        return (parseInt(delta / 86400)).toString() + ' days ago';
+	      }
+	    }
+	//-->!]]>
+	</script>
+	<script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/mongolab.json"></script>
+	</div></div><!-- /#sidebar -->
+
+		</div><!-- /#main-sidebar-container -->         
+
+		
+    </div><!-- /#content -->
+	
+	<div id="footer" class="col-full">
+	
+		    
+	    
+		<div id="copyright" class="col-left">
+			<p></p><p>© 2014 ObjectLabs Corporation.  All Rights Reserved.</p><p></p>		</div>
+		
+		<div id="credit" class="col-right">
+			<p>Powered by <a href="http://wordpress.org/" title="WordPress">WordPress</a>. Designed by <a href="http://www.woothemes.com/" title="WooThemes"><img src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/woothemes.png" width="74" height="19" alt="Woo Themes"></a></p>		</div>
+		
+	</div><!-- /#footer  -->
+	
+	    
+	
+	</div><!-- /#wrapper -->
+	<img src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/seg" width="1" height="1">
+<script type="text/javascript">
+/* <![CDATA[ */
+var google_conversion_id = 971843581;
+var google_conversion_language = "en";
+var google_conversion_format = "3";
+var google_conversion_color = "ffffff";
+var google_conversion_label = "uqJvCKvhjQQQ_c-0zwM";
+var google_conversion_value = 0;
+/* ]]> */
+</script>
+<script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/conversion.js">
+</script><img height="1" width="1" border="0" alt="" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/saved_resource(2)">
+<noscript>
+&lt;div style="display:inline;"&gt;
+&lt;img height="1" width="1" style="border-style:none;" alt="" src="https://www.googleadservices.com/pagead/conversion/971843581/?value=0&amp;label=uqJvCKvhjQQQ_c-0zwM&amp;guid=ON&amp;script=0"/&gt;
+&lt;/div&gt;
+</noscript>
+<script type="text/javascript">
+/* <![CDATA[ */
+var tocplus = {"smooth_scroll":"1"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/front.js"></script>
+		
+<div id="fb-root" class=" fb_reset"><div style="position: absolute; top: -10000px; height: 0px; width: 0px;"><div></div></div><div style="position: absolute; top: -10000px; height: 0px; width: 0px;"><div><iframe name="fb_xdm_frame_http" frameborder="0" allowtransparency="true" scrolling="no" id="fb_xdm_frame_http" aria-hidden="true" title="Facebook Cross Domain Communication Frame" tab-index="-1" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/xd_arbiter.htm" style="border: none;"></iframe><iframe name="fb_xdm_frame_https" frameborder="0" allowtransparency="true" scrolling="no" id="fb_xdm_frame_https" aria-hidden="true" title="Facebook Cross Domain Communication Frame" tab-index="-1" src="./Understanding MongoDB storage and dbStats   MongoLab  MongoDB-as-Service_files/xd_arbiter(1).htm" style="border: none;"></iframe></div></div></div></body></html>
