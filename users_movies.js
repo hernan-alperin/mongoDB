@@ -16,6 +16,8 @@ for (k=1; k<=l; k++) {
   db.users.update({_id:random_user}, {$set:{movies:seen}})
   var audience = db.movies.findOne(random_movie).users; audience.push(random_user)
   db.movies.update({_id:random_movie}, {$set:{users:audience}})
+  
+  db.co_occurrence.insert({'k':k, user:random_user, movie:random_movie})
 }
 
 //db.users.findOne(random_user)
