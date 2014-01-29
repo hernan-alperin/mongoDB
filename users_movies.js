@@ -27,6 +27,6 @@ for (movie_i=1; movie_i<=m; movie_i++)
     var users_i=db.users_movies.find({movie:movie_i}).toArray().sort()
     var users_j=db.users_movies.find({movie:movie_j}).toArray().sort()
 
-  // ...
+  // ... esto esta mal (el sort sobre que?) y se cuelga. hay que mejorarlo! como producto de matrices esparzas
 
   }
