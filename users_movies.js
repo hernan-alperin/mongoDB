@@ -17,7 +17,16 @@ for (k=1; k<=l; k++) {
   var audience = db.movies.findOne(random_movie).users; audience.push(random_user)
   db.movies.update({_id:random_movie}, {$set:{users:audience}})
   
-  db.co_occurrence.insert({'k':k, user:random_user, movie:random_movie})
+  db.users_movies.insert({'k':k, user:random_user, movie:random_movie})
 }
 
-//db.users.findOne(random_user)
+// create the co-occurrence matrix
+for (movie_i=1; movie_i<=m; movie_i++)
+  for (movie_j=1; movie_j<=m; movie_j++) {
+    var s_ij=0;
+    var users_i=db.users_movies.find({movie:movie_i}).toArray().sort()
+    var users_j=db.users_movies.find({movie:movie_j}).toArray().sort()
+
+  // ...
+
+  }
