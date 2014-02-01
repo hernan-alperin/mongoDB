@@ -6,7 +6,7 @@ var m=1000 // movies
 var l=10000 // events
 
 for (i=1; i<=n; i++) db.users.insert({'i':i, 'movies':[]})
-for (j=1; j<=m; j++) db.movies.insert({'j':j, 'users'':[]})
+for (j=1; j<=m; j++) db.movies.insert({'j':j, 'users':[]})
 
 for (k=1; k<=l; k++) {
   var random_user = db.users.findOne({i:Math.floor(Math.random()*db.users.count())+1})._id
