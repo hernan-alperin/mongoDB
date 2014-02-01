@@ -11,6 +11,3 @@ it is completely scalable and can be used to test and measure performance of
 recommendation engines.
 
 
--------
-sudo mongod
-mongo mongofile.js
