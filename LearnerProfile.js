@@ -1,1 +1,0 @@
-/home/alpe/git/viridis_test/screenshots/LearnerProfile.js
