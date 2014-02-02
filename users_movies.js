@@ -1,9 +1,9 @@
 // random movie seen selection
 db.users.drop(); db.movies.drop(); db.users_movies.drop(); db.coocurrence.drop();
 
-var n=10 // users
-var m=10 // movies
-var l=30 // events
+var n=100 // users
+var m=1000 // movies
+var l=5000 // events
 
 for (i=1; i<=n; i++) db.users.insert({'i':i, 'movies':[]})
 for (j=1; j<=m; j++) db.movies.insert({'j':j, 'users':[]})
@@ -41,3 +41,18 @@ for (i=0; i<movies.length; i++) {
     if (s_ij) db.coocurrence.insert({'movie_i':movie_i, 'movie_j':movie_j, 's_ij':s_ij});
   }
 }
+
+// movies score array for user_i
+/* not working yet ...
+function movies_scores_4user(user_i) {
+  var seen=db.users.findOne(user_i).movies;
+  var movies_scores = [];
+  for (j=0; j<seen.length; j++) {
+    var coocurr=db.coocurrence.findOne({'movie_i':seen[j]});
+    movies_scores coocurr.movie_j;
+    movies_scores.score+=coocurr.s_ij;
+    movies_scores.push({movie:seen}
+  }
+}
+*/
+
