@@ -13,6 +13,8 @@
   'do something different every day': 2
 */
 
+// randomly get some n profiles and m job offers 
+
 var n=50; // profiles
 for (var p=0; p<n; p++) {
   var learner_profile={};
@@ -31,12 +33,16 @@ for (var j=0; j<m; j++) {
   db.jobs_requirements.insert(job_require);
 }
 
+
+// the score of the candidate i for the job j is computed using the inner product
+// of the Working Style of the candidate and the Job Style requirements from the job offer
 function score(candidate_i,job_j) {
   var s=0;
   for (var q=1; q<=12; q++) s+=candidate_i['q'+q]*job_j['q'+q];
   return s;
 }
 
+// getting the sorted list of candidate for a given one job
 var job_pos=db.jobs_requirements.findOne();
 var candidates=db.learners_profiles.find().toArray();
 var ranking=[]
