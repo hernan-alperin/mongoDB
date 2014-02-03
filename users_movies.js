@@ -1,6 +1,7 @@
 // random movie seen selection
 db.users.drop(); db.movies.drop(); db.users_movies.drop(); db.coocurrence.drop();
 
+// testing the running time given different n, m, l sizes 
 var n=100 // users
 var m=1000 // movies
 var l=5000 // events
@@ -16,7 +17,7 @@ for (k=1; k<=l; k++) {
   db.users.update({_id:random_user}, {$set:{'movies':seen}})
   var audience = db.movies.findOne(random_movie).users; audience.push(random_user)
   db.movies.update({_id:random_movie}, {$set:{'users':audience}})
-  
+  // many-to-many matrix
   db.users_movies.insert({'k':k, 'user':random_user, 'movie':random_movie})
 }
 
@@ -43,7 +44,7 @@ for (i=0; i<movies.length; i++) {
 }
 
 // movies score array for user_i
-/* not working yet ...
+/* not working yet ... should be the dot product between the co-ocurrence matrix and the movies vector of that user
 function movies_scores_4user(user_i) {
   var seen=db.users.findOne(user_i).movies;
   var movies_scores = [];
