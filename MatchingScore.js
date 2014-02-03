@@ -1,4 +1,7 @@
 /* 12 questions that define Work Style. will take values in [-2, -1, 0, 1, 2]
+  or from 1 to 5 and then substracting 3
+  they represent strongly dislike, some dislike, neutral, like, and strongly like
+  
   'set up operate and repair machines':5,
   'study the causes of a condition and develop a new medicine':4,
   'write stories or play a musical instrument':3,
