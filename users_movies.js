@@ -59,4 +59,8 @@ function movies_scores_4user(user_i) {
   return movies_scores;
 }
 
+// cool
+var a = function movies_scores_4user(db.users.findOne()); 
+var max=0; for (i in a) if (a[i]>max) max=a[i_max=i]; print(i_max)
+
 
