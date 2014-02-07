@@ -44,16 +44,19 @@ for (i=0; i<movies.length; i++) {
 }
 
 // movies score array for user_i
-/* not working yet ... should be the dot product between the co-ocurrence matrix and the movies vector of that user
+// not working yet ... should be the dot product between the co-ocurrence matrix and the movies vector of that user
 function movies_scores_4user(user_i) {
   var seen=db.users.findOne(user_i).movies;
-  var movies_scores = [];
-  for (j=0; j<seen.length; j++) {
+  var movies_scores={};
+  for (j in seen) {
     var coocurr=db.coocurrence.findOne({'movie_i':seen[j]});
-    movies_scores coocurr.movie_j;
-    movies_scores.score+=coocurr.s_ij;
-    movies_scores.push({movie:seen}
+    if (!movies_scores[coocurr.movie_j]) movies_scores[coocurr.movie_j]=coocurr.s_ij;
+    else movies_scores[coocurr.movie_j]+=coocurr.s_ij;
+        coocurr=db.coocurrence.findOne({'movie_j':seen[j]});
+    if (!movies_scores[coocurr.movie_i]) movies_scores[coocurr.movie_i]=coocurr.s_ij;
+    else movies_scores[coocurr.movie_i]+=coocurr.s_ij;
   }
+  return movies_scores;
 }
-*/
+
 
